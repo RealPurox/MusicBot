@@ -4,19 +4,19 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import me.purox.musicbot.JDA
-import me.purox.musicbot.MUSIC_MANAGER
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
+import me.purox.musicbot.MusicBot
 import me.purox.musicbot.commands.Command
+import me.purox.musicbot.musicBot
 import net.dv8tion.jda.core.entities.*
 
-class GuildPlayer(guild: Guild) : AudioEventAdapter() {
+class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
 
     var destroyTime = System.currentTimeMillis() + 60000 //60 seconds
     private var guildId: String = guild.id
-    private val audioPlayer: AudioPlayer = MUSIC_MANAGER.audioPlayerManager.createPlayer()
+    private val audioPlayer: AudioPlayer = musicBot.musicManager.audioPlayerManager.createPlayer()
 
     init {
         audioPlayer.addListener(this)
@@ -27,12 +27,12 @@ class GuildPlayer(guild: Guild) : AudioEventAdapter() {
         leave()
         audioPlayer.removeListener(this)
         audioPlayer.destroy()
-        MUSIC_MANAGER.guildPlayers.remove(guildId)
+        musicBot.musicManager.guildPlayers.remove(guildId)
     }
 
     fun join(voiceChannel: VoiceChannel) {
-        MUSIC_MANAGER.executor.submit {
-            val guild = JDA.getGuildById(guildId) ?: return@submit
+        musicBot.musicManager.executor.submit {
+            val guild = musicBot.jda.getGuildById(guildId) ?: return@submit
 
             val audioManager = guild.audioManager
 
@@ -54,8 +54,8 @@ class GuildPlayer(guild: Guild) : AudioEventAdapter() {
     }
 
     private fun leave() {
-        MUSIC_MANAGER.executor.submit {
-            val guild = JDA.getGuildById(guildId) ?: return@submit
+        musicBot.musicManager.executor.submit {
+            val guild = musicBot.jda.getGuildById(guildId) ?: return@submit
 
             val vState = guild.selfMember.voiceState
             if (!vState.inVoiceChannel()) return@submit
@@ -73,17 +73,18 @@ class GuildPlayer(guild: Guild) : AudioEventAdapter() {
     }
 
     override fun onTrackEnd(player: AudioPlayer?, track: AudioTrack?, endReason: AudioTrackEndReason?) {
-        leave()
+        //todo queue or something
     }
 
     fun loadSong(query: String, command: Command, sender: Member) {
-        MUSIC_MANAGER.audioPlayerManager.loadItem(query, object : AudioLoadResultHandler {
+        musicBot.musicManager.audioPlayerManager.loadItem(query, object : AudioLoadResultHandler {
             override fun trackLoaded(audioTrack: AudioTrack) {
                 if (!command.event.guild.selfMember.voiceState.inVoiceChannel()) {
                     if (!sender.voiceState.inVoiceChannel()) return
                     join(sender.voiceState.channel)
                 }
                 audioPlayer.playTrack(audioTrack)
+                command.event.channel.sendMessage(":notes: Now playing: ")
             }
 
             override fun playlistLoaded(audioPlaylist: AudioPlaylist) {

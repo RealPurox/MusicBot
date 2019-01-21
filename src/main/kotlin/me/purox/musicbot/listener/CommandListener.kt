@@ -1,8 +1,7 @@
 package me.purox.musicbot.listener
 
-import me.purox.musicbot.COMMAND_HANDLER
-import me.purox.musicbot.PREFIX
 import me.purox.musicbot.commands.Command
+import me.purox.musicbot.musicBot
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 
@@ -11,11 +10,11 @@ class CommandListener : ListenerAdapter() {
     override fun onMessageReceived(event: MessageReceivedEvent?) {
         val message = event?.message?.contentRaw
 
-        if (!event?.author?.isBot!! && message?.startsWith(PREFIX)!!) {
-            val invoke = message.substring(PREFIX.length).replace("\n", " ").split(" ")[0].toLowerCase();
+        if (!event?.author?.isBot!! && message?.startsWith(musicBot.config.prefix)!!) {
+            val invoke = message.substring(musicBot.config.prefix.length).replace("\n", " ").split(" ")[0].toLowerCase();
 
-            if (COMMAND_HANDLER.commands.contains(invoke)) {
-                COMMAND_HANDLER.handleCommand(Command(event))
+            if (musicBot.commandHandler.commands.contains(invoke)) {
+                musicBot.commandHandler.handleCommand(Command(event))
             }
         }
     }

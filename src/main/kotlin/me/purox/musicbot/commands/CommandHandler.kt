@@ -1,16 +1,18 @@
 package me.purox.musicbot.commands
 
 import me.purox.musicbot.commands.music.PlayCommand
-import me.purox.musicbot.commands.music.TestCommand
+import me.purox.musicbot.musicBot
+import org.slf4j.LoggerFactory
 
 open class CommandHandler {
+
+    private val logger = LoggerFactory.getLogger(CommandHandler::class.java)
 
     val commands: MutableMap<String, ICommand> = mutableMapOf()
     private val unmodifiedCommands: MutableMap<String, ICommand> = mutableMapOf()
 
     init {
         //register commands here
-        registerCommand(TestCommand())
         registerCommand(PlayCommand())
     }
 
@@ -24,12 +26,13 @@ open class CommandHandler {
 
     fun handleCommand(command: Command) {
         val iCommand = command.iCommand
+
         if (iCommand == null) {
-            println("Command not found : ${command.invoke}")
+            logger.warn("Command not found : ${command.invoke}")
             return
         }
 
-        println("Command ${command.invoke} executed by ${command.event.author.name}#${command.event.author.discriminator}")
+        logger.info("Command ${musicBot.config.prefix + command.invoke} executed by ${command.event.author.name}#${command.event.author.discriminator}")
         iCommand.execute(command)
     }
 }
