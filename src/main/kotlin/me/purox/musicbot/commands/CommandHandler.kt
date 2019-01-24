@@ -1,6 +1,8 @@
 package me.purox.musicbot.commands
 
 import me.purox.musicbot.commands.music.PlayCommand
+import me.purox.musicbot.commands.music.QueueCommand
+import me.purox.musicbot.commands.music.StopCommand
 import me.purox.musicbot.musicBot
 import org.slf4j.LoggerFactory
 
@@ -14,6 +16,8 @@ open class CommandHandler {
     init {
         //register commands here
         registerCommand(PlayCommand())
+        registerCommand(StopCommand())
+        registerCommand(QueueCommand())
     }
 
     private fun registerCommand(iCommand: ICommand) {

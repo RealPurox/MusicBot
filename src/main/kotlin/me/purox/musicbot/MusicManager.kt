@@ -31,12 +31,12 @@ class MusicManager {
         }, 2, 2, TimeUnit.MINUTES)
     }
 
-    fun getGuildPlayer(guild: Guild) : GuildPlayer? {
+    fun getGuildPlayer(guild: Guild) : GuildPlayer {
         if (guildPlayers[guild.id] == null) {
             logger.info("Created Music Player for guild ${guild.name} (${guild.id})")
             guildPlayers[guild.id] = GuildPlayer(guild, musicBot)
         }
-        return guildPlayers[guild.id]
+        return guildPlayers[guild.id]!!
     }
 
     fun getPlayTime(time: Long) : String {

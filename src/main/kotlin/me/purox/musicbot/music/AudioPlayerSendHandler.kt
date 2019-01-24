@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
 import net.dv8tion.jda.core.audio.AudioSendHandler
 
 
-class AudioPlayerSendHandler internal constructor(private val audioPlayer: AudioPlayer) : AudioSendHandler {
+class AudioPlayerSendHandler constructor(private val audioPlayer: AudioPlayer) : AudioSendHandler {
 
     private var lastFrame: AudioFrame? = null
 
