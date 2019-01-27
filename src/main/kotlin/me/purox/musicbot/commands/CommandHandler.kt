@@ -2,6 +2,7 @@ package me.purox.musicbot.commands
 
 import me.purox.musicbot.commands.music.PlayCommand
 import me.purox.musicbot.commands.music.QueueCommand
+import me.purox.musicbot.commands.music.SkipCommand
 import me.purox.musicbot.commands.music.StopCommand
 import me.purox.musicbot.musicBot
 import org.slf4j.LoggerFactory
@@ -18,6 +19,7 @@ open class CommandHandler {
         registerCommand(PlayCommand())
         registerCommand(StopCommand())
         registerCommand(QueueCommand())
+        registerCommand(SkipCommand())
     }
 
     private fun registerCommand(iCommand: ICommand) {
@@ -37,6 +39,6 @@ open class CommandHandler {
         }
 
         logger.info("Command ${musicBot.config.prefix + command.invoke} executed by ${command.event.author.name}#${command.event.author.discriminator}")
-        iCommand.execute(command)
+        iCommand.execute(command, CommandSender(command.author, command.event))
     }
 }

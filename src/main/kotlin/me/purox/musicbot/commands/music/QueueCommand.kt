@@ -2,6 +2,7 @@ package me.purox.musicbot.commands.music
 
 import me.purox.musicbot.Emote
 import me.purox.musicbot.commands.Command
+import me.purox.musicbot.commands.CommandSender
 import me.purox.musicbot.commands.ICommand
 import me.purox.musicbot.music.AudioInfo
 import me.purox.musicbot.music.GuildPlayer
@@ -10,7 +11,7 @@ import net.dv8tion.jda.core.EmbedBuilder
 
 class QueueCommand : ICommand("queue") {
 
-    override fun execute(command: Command) {
+    override fun execute(command: Command, sender: CommandSender) {
         val guildPlayer : GuildPlayer = musicBot.musicManager.getGuildPlayer(command.guild)
         val builder : EmbedBuilder = EmbedBuilder()
                 .setColor(0x36393E)
@@ -28,7 +29,7 @@ class QueueCommand : ICommand("queue") {
             val current : AudioInfo = guildPlayer.queue.peek()
 
             builder.appendDescription(":musical_note: __**Currently Playing**__ :musical_note:\n\n")
-            builder.appendDescription("`${guildPlayer.getAudioInfoId(current)}` [${current.audioTrack.info.title}](${current.audioTrack.info.uri}) - requested by **${current.requester.name}#${current.requester.discriminator}**\n\n")
+            builder.appendDescription("`${current.queuePos}` [${current.audioTrack.info.title}](${current.audioTrack.info.uri}) - requested by **${current.requester}**\n\n")
         }
 
         if (displayNext) {
@@ -36,11 +37,11 @@ class QueueCommand : ICommand("queue") {
             builder.appendDescription(":arrow_double_down: __**Up Next**__ :arrow_double_down:\n\n")
 
             for (audioInfo in list) {
-                builder.appendDescription("`${guildPlayer.getAudioInfoId(audioInfo)}` [${audioInfo.audioTrack.info.title}](${audioInfo.audioTrack.info.uri}) - requested by **${audioInfo.requester.name}#${audioInfo.requester.discriminator}**\n\n")
+                builder.appendDescription("`${audioInfo.queuePos}` [${audioInfo.audioTrack.info.title}](${audioInfo.audioTrack.info.uri}) - requested by **${audioInfo.requester}**\n\n")
             }
         }
 
         builder.setFooter("${guildPlayer.queue.size} songs: ${guildPlayer.getQueueDuration().replace("`", "")}", null)
-        command.channel.sendMessage(builder.build()).queue()
+        sender.reply(builder.build())
     }
 }
