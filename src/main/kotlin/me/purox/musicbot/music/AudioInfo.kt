@@ -20,6 +20,6 @@ class AudioInfo(val audioTrack: AudioTrack, val requester: String, private val c
     }
 
     override fun toString(): String {
-        return "[AudioInfo: Title:${audioTrack.info.title} || URI:${audioTrack.info.uri} || Requester: $requester || Channel:$channel]"
+        return "{\"info\": { \"title\":\"${audioTrack.info.title}\", \"uri\":\"${audioTrack.info.uri}\", \"requester\": \"$requester\", \"channel\":\"$channel\" }"
     }
 }

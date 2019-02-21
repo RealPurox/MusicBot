@@ -7,15 +7,18 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
-import me.purox.musicbot.Emote
 import me.purox.musicbot.MusicBot
 import me.purox.musicbot.commands.Command
 import me.purox.musicbot.commands.CommandSender
 import me.purox.musicbot.musicBot
 import net.dv8tion.jda.core.entities.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.LinkedBlockingQueue
 
 class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
+
+    private val logger : Logger = LoggerFactory.getLogger(GuildPlayer::class.java)
 
     private var guildId: String = guild.id
 
@@ -30,6 +33,7 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
     }
 
     fun addToQueue(audioInfo: AudioInfo) {
+        logger.info("Added song to queue for guild $guildId: $audioInfo")
         //already in queue
         audioInfo.queuePos = queue.size + 1
         queue.add(audioInfo)
@@ -113,6 +117,7 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
 
             audioManager.isAutoReconnect = true
             audioManager.openAudioConnection(voiceChannel)
+            logger.info("Joined VoiceChannel $voiceChannel in guild $guildId")
         }
     }
 
@@ -128,10 +133,12 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
             audioManager.sendingHandler = null
             audioManager.isAutoReconnect = false
             audioManager.closeAudioConnection()
+            logger.info("Joined VoiceChannel in guild $guildId")
         }
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+        logger.info("Now playing ${getAudioInfo(track)} in guild $guildId")
         destroyTime = System.currentTimeMillis() + track.info.length + 600000 //60 seconds
         val audioInfo = getAudioInfo(track)
         audioInfo?.playing = true
@@ -167,6 +174,7 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
                 }
                 addToQueue(AudioInfo(audioTrack, "${sender.name}#${sender.discriminator}", command.event.textChannel.id))
                 sender.success("`${audioTrack.info.title}` by __${audioTrack.info.author}__ has been added to the queue. ${musicBot.musicManager.getPlayTime(audioTrack.duration)}")
+                logger.info("Loaded Track ${audioTrack.info.title} by ${audioTrack.info.author} to guild $guildId")
             }
 
             override fun playlistLoaded(audioPlaylist: AudioPlaylist) {
@@ -183,15 +191,18 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
                         addToQueue(AudioInfo(audioPlaylist.tracks[i], "${sender.name}#${sender.discriminator}", command.event.textChannel.id))
                     }
                     sender.success("Playlist `${audioPlaylist.name}` with __${audioPlaylist.tracks.size}__ songs has been added to the queue. ${musicBot.musicManager.getPlayTime(time)}")
+                    logger.info("Loaded Playlist ${audioPlaylist.name} to guild $guildId")
                 }
             }
 
             override fun noMatches() {
                 sender.error("No matching song for the query `${if (query.startsWith("ytsearch:")) query.substring(9) else query}` could be found")
+                logger.info("No matches found for query: ${if (query.startsWith("ytsearch:")) query.substring(9) else query}")
             }
 
             override fun loadFailed(e: FriendlyException) {
                 sender.error("An error occurred while attempting to load the song. Please try again later.")
+                logger.error("Error occurred while loading query: ${if (query.startsWith("ytsearch:")) query.substring(9) else query}", e)
             }
         })
     }
