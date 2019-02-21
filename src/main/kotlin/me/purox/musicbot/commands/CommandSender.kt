@@ -4,10 +4,12 @@ import me.purox.musicbot.Emote
 import me.purox.musicbot.utils.sendMessage
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.Guild
+import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.PrivateChannel
 import net.dv8tion.jda.core.entities.User
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.requests.RestAction
+import java.util.function.Consumer
 
 class CommandSender (private val user : User, private val  event: MessageReceivedEvent) : User {
 
@@ -25,6 +27,10 @@ class CommandSender (private val user : User, private val  event: MessageReceive
 
     fun success(message: String) {
         sendMessage(event.channel, "(${Emote.SUCCESS}): $message")
+    }
+
+    fun reply(message: Any, consumer: Consumer<Message>) {
+        sendMessage(event.channel, message, consumer)
     }
 
     fun reply(message: Any) {

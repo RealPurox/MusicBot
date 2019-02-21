@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
+import me.purox.musicbot.Emote
 import me.purox.musicbot.MusicBot
 import me.purox.musicbot.commands.Command
 import me.purox.musicbot.commands.CommandSender
@@ -14,6 +15,7 @@ import me.purox.musicbot.musicBot
 import net.dv8tion.jda.core.entities.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
@@ -33,7 +35,7 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
     }
 
     fun addToQueue(audioInfo: AudioInfo) {
-        logger.info("Added song to queue for guild $guildId: $audioInfo")
+        logger.debug("Added song to queue for guild $guildId: $audioInfo")
         //already in queue
         audioInfo.queuePos = queue.size + 1
         queue.add(audioInfo)
@@ -83,7 +85,16 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
 
         audioPlayer.stopTrack()
 
-        return skipped + 1
+        return skipped
+    }
+
+    fun shuffleQueue() {
+        val current = queue.poll()
+        val list = queue.toMutableList()
+        list.shuffle()
+        queue.clear()
+        queue.add(current)
+        queue.addAll(list)
     }
 
     private fun getAudioInfo(track: AudioTrack) : AudioInfo? {
@@ -164,7 +175,7 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
         queue.forEach { info -> info.queuePos -- }
     }
 
-    fun loadSong(query: String, command: Command, sender: CommandSender) {
+    fun loadSong(query: String, command: Command, sender: CommandSender, message: Message) {
         musicBot.musicManager.audioPlayerManager.loadItem(query, object : AudioLoadResultHandler {
 
             override fun trackLoaded(audioTrack: AudioTrack) {
@@ -173,7 +184,7 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
                     join(command.member.voiceState.channel)
                 }
                 addToQueue(AudioInfo(audioTrack, "${sender.name}#${sender.discriminator}", command.event.textChannel.id))
-                sender.success("`${audioTrack.info.title}` by __${audioTrack.info.author}__ has been added to the queue. ${musicBot.musicManager.getPlayTime(audioTrack.duration)}")
+                message.editMessage("(${Emote.SUCCESS}): ${audioTrack.info.title}` by __${audioTrack.info.author}__ has been added to the queue. ${musicBot.musicManager.getPlayTime(audioTrack.duration)}").queue()
                 logger.info("Loaded Track ${audioTrack.info.title} by ${audioTrack.info.author} to guild $guildId")
             }
 
@@ -190,18 +201,18 @@ class GuildPlayer(guild: Guild, musicBot: MusicBot) : AudioEventAdapter() {
                         time += audioPlaylist.tracks[i].info.length
                         addToQueue(AudioInfo(audioPlaylist.tracks[i], "${sender.name}#${sender.discriminator}", command.event.textChannel.id))
                     }
-                    sender.success("Playlist `${audioPlaylist.name}` with __${audioPlaylist.tracks.size}__ songs has been added to the queue. ${musicBot.musicManager.getPlayTime(time)}")
+                    message.editMessage("(${Emote.SUCCESS}): Playlist `${audioPlaylist.name}` with __${audioPlaylist.tracks.size}__ songs has been added to the queue. ${musicBot.musicManager.getPlayTime(time)}").queue()
                     logger.info("Loaded Playlist ${audioPlaylist.name} to guild $guildId")
                 }
             }
 
             override fun noMatches() {
-                sender.error("No matching song for the query `${if (query.startsWith("ytsearch:")) query.substring(9) else query}` could be found")
+                message.editMessage("(${Emote.ERROR}): No matching song for the query `${if (query.startsWith("ytsearch:")) query.substring(9) else query}` could be found").queue()
                 logger.info("No matches found for query: ${if (query.startsWith("ytsearch:")) query.substring(9) else query}")
             }
 
             override fun loadFailed(e: FriendlyException) {
-                sender.error("An error occurred while attempting to load the song. Please try again later.")
+                message.editMessage("(${Emote.ERROR}): An error occurred while attempting to load the song. Please try again later.").queue()
                 logger.error("Error occurred while loading query: ${if (query.startsWith("ytsearch:")) query.substring(9) else query}", e)
             }
         })
